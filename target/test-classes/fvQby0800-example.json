@@ -1,0 +1,51 @@
+[
+  {
+    "QueueListReply": {
+      "queueView": {
+        "queueNumber": {
+          "queueDetails": {
+            "number": 1
+          }
+        },
+        "categoryDetails": {
+          "subQueueInfoDetails": {
+            "itemNumber": "21"
+          }
+        },
+        "item": [
+          {
+            "recLoc": {
+              "reservation": {
+                "controlNumber": "ABC123"
+              }
+            },
+            "segment": {
+              "flightDate": {
+                "departureDate": "04MAY19"
+              },
+              "boardPointDetails": {
+                "trueLocation": "YWG"
+              },
+              "offpointDetails": {
+                "trueLocation": "AAD"
+              },
+              "companyDetails": {
+                "marketingCompany": "AC"
+              },
+              "flightIdentification": {
+                "flightNumber": "112",
+                "operationalSuffix": "AC"
+              }
+            },
+            "pnrdates": [
+              {
+                "timeMode": "700",
+                "dateTime": "2019-01-02T14:53:00"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

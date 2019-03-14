@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"><flow name="p-flights-flightcode-pax-getFlow">
+        <dw:transform-message doc:name="Transform Message" metadata:id="58508939-6b8a-4347-bd7e-417c5f0106f3" >
+            <dw:input-payload doc:sample="pnr_listpassbyflightjson-874.json" mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json //skipNullOn = "everywhere"
+%var input = payload.PNR_ListPassengersByFlightReply
+
+%var consolidatedPNRViews = flatten ((input.aggregatedOutput filter $.pnrViews?) map ($.pnrViews))
+%var flight = input.flightDateQuery.flightIdentification.flightDetails.flightNumber as :string
+%var dateQuery = input.flightDateQuery.dateIdentification.dateTime
+%var flightDate = dateQuery.day ++ dateQuery.month ++ dateQuery.year[2..3]
+%var referenceFlight = (flatten (consolidatedPNRViews.pnrView.originDestinationDetails).itineraryInfo filter $.travelProduct.product.depDate == flightDate and $.travelProduct.productDetails.identification == flight)[0]
+
+%var refFlight = (flatten (consolidatedPNRViews.pnrView.originDestinationDetails).itineraryInfo filter $.travelProduct.product.depDate == flightDate and $.travelProduct.productDetails.identification == flight)
+
+%function getRecords(itinerary)
+	(  (itinerary map (it) -> {
+		it: it filter $.travelProduct.product.depDate == "060319" and $.travelProduct.productDetails.identification == "874"
+	})
+		
+	)
+	
+%function ssrFilterReference(x) (x default [] map {
+  referenceForDataElement: $.referenceForDataElement,
+  serviceRequest: $.serviceRequest
+}) filter $.referenceForDataElement != null
+
+	
+%function listPAXSSR(pnrData)
+	((flatten ((ssrFilterReference(pnrData)) map ((el, elIdx) -> (
+	  el.referenceForDataElement.reference filter $.qualifier == 'PT' map {
+	    ($.number): el.serviceRequest.ssr
+	  }
+	  )))) map (
+	  $ mapObject ({pax: $$ as :string, data: $})
+		))
+		
+%function listPAXFQTV(pnrData)
+((flatten ((fqtvFilterReference(pnrData)) map ((el, elIdx) -> (
+  el.referenceForDataElement.reference filter $.qualifier == 'PT' map {
+    ($.number): el.frequentTravellerInfo
+  }
+  )))) map (
+  $ mapObject ({pax: $$ as :string, data: $})
+	))
+	
+%function fqtvVerifFilterReference(x) (x map {
+  referenceForDataElement: $.referenceForDataElement,
+  frequentTravellerVerif: $.frequentTravellerVerif
+}) filter $.referenceForDataElement != null
+
+%function fqtvFilterReference(x) (x map {
+  referenceForDataElement: $.referenceForDataElement,
+  frequentTravellerInfo: $.frequentTravellerInfo
+}) filter $.referenceForDataElement != null
+
+%function seatFilterReference(x) (x map {
+  referenceForStructDataElement: $.referenceForStructDataElement,
+  seatData: $.seatData
+}) filter $.referenceForStructDataElement != null
+	
+%function listPAXSeat(pnrData)
+((flatten ((seatFilterReference(pnrData)) map ((el, elIdx) -> (
+  el.referenceForStructDataElement.reference filter $.qualifier == 'PT' map {
+    ($.number): el.seatData
+  }
+  )))) map (
+  $ mapObject ({pax: $$ as :string, data: $})
+	))
+	
+%function getItineraryInfo(itin)
+	( 
+		(itin filter $.travelProduct.product.depDate == flightDate and $.travelProduct.productDetails.identification == flight)
+	)
+	
+%function getSeatFeeIndicator(dataElem, travellerNumber)
+	(
+		(listPAXSeat(dataElem) filter $.pax == travellerNumber and $.data != null)[0].data.individualSeatGroup[0].seatIndicator.statusDetails.action 
+	)
+---
+{
+	
+	fd: flightDate,
+	flight: flight,
+//	testItinerary: getRecords(consolidatedPNRViews.pnrView.originDestinationDetails.itineraryInfo)[3].it.inventoryData
+//	,
+//	consolidated: consolidatedPNRViews.pnrView.originDestinationDetails.itineraryInfo
+
+	
+	
+//test: refFlight
+//	consolodated: consolidatedPNRViews
+	//ref: referenceFlight
+//	,
+	RecordList: consolidatedPNRViews.pnrView map ((pnrView, pnrIdx) -> {
+		RecordType: 'R',
+		(RecordLocator: pnrView.originDestinationDetails.itineraryInfo[0].itineraryReservationInfo[0].reservation.controlNumber) 
+		when (pnrView.originDestinationDetails.itineraryInfo[0].itineraryReservationInfo[0].reservation.controlNumber?)
+		,
+		PassengerType: pnrView.travellerInfo[0].passengerData[0].travellerInformation.passenger[0].type,
+		ClassOfService: getItineraryInfo(pnrView.originDestinationDetails.itineraryInfo)[0].travelProduct.productDetails.classOfService,
+		(CabinClass: getItineraryInfo(pnrView.originDestinationDetails.itineraryInfo)[0].inventoryData.cabinInformation.cabinCode) when
+			getItineraryInfo(pnrView.originDestinationDetails.itineraryInfo)[0].inventoryData.cabinInformation.cabinCode?
+			
+//		,
+//		recordlocatorinfo: consolidatedPNRViews
+
+//		,
+//		ConnectionList: pnrView.originDestinationDetails.itineraryInfo map ((itinInfo, itinIdx) -> {
+//			ConnectionIndicator: itinInfo.elementManagementItinerary.elementReference.number as :string,
+//			ConnectionType: itinInfo.travelProduct.typeDetail.detail[0],
+//			ConnectionQualifier: itinInfo.elementManagementItinerary.elementReference.qualifier
+//		})
+		,
+		PassengerList: flatten (pnrView.travellerInfo map ((traveller, travellerIdx) -> (
+			traveller.passengerData map ((pax, paxIdx) -> {
+			PaxNo: traveller.elementManagementPassenger.elementReference.number as :string,
+//			FirstName: pax.travellerInformation.passenger[0].firstName,
+//			LastName: pax.travellerInformation.traveller.surname,
+//			AirportFactsList: (listPAXSSR(pnrView.dataElementsMaster.dataElementsIndiv) filter $.pax == traveller.elementManagementPassenger.elementReference.number as :string map ((airportFact) -> {
+//				AirportFact: airportFact.data.type
+//				})),
+//			Infant: (pax.travellerInformation.passenger filter $.infantIndicator?)[0] default "0",
+//			CheckInStatus: pnrView.dataElementsMaster.dataElementsStruct[0].ticketDocumentData.couponsInfo.couponDetails.cpnStatus,
+//			TierLevel: (listPAXFQTV(pnrView.dataElementsMaster.dataElementsIndiv) filter $.pax == traveller.elementManagementPassenger.elementReference.number as :string and $.data != null)[0].data.frequentTravellerDetails.tierLevel,
+//			FQTVCarrierCode: (listPAXFQTV(pnrView.dataElementsMaster.dataElementsIndiv) filter $.pax == traveller.elementManagementPassenger.elementReference.number as :string and $.data != null)[0].data.frequentTravellerDetails.carrier,
+//			FQTVNumber: (listPAXFQTV(pnrView.dataElementsMaster.dataElementsIndiv) filter $.pax == traveller.elementManagementPassenger.elementReference.number as :string and $.data != null)[0].data.frequentTravellerDetails.number,
+//			PaxRefNumber: (((listPAXSeat(pnrView.dataElementsMaster.dataElementsStruct) filter $.pax == traveller.elementManagementPassenger.elementReference.number as :string and $.data != null)[0].data.individualSeatGroup[0]).seatPassenger.rangeOfRowsDetails.seatRowNumber as :string ++ ((listPAXSeat(pnrView.dataElementsMaster.dataElementsStruct) filter $.pax == traveller.elementManagementPassenger.elementReference.number as :string and $.data != null)[0].data.individualSeatGroup[0]).seatPassenger.rangeOfRowsDetails.seatColumn[0]) default null,
+//			SeatNumber: (((listPAXSeat(pnrView.dataElementsMaster.dataElementsStruct) filter $.pax == traveller.elementManagementPassenger.elementReference.number as :string and $.data != null)[0].data.individualSeatGroup[0]).seatPassenger.rangeOfRowsDetails.seatRowNumber as :string ++ ((listPAXSeat(pnrView.dataElementsMaster.dataElementsStruct) filter $.pax == traveller.elementManagementPassenger.elementReference.number as :string and $.data != null)[0].data.individualSeatGroup[0]).seatPassenger.rangeOfRowsDetails.seatColumn[0]) default null,
+			(SeatFeeIdentifier: getSeatFeeIndicator(pnrView.dataElementsMaster.dataElementsStruct, traveller.elementManagementPassenger.elementReference.number as :string)) 
+				when getSeatFeeIndicator(pnrView.dataElementsMaster.dataElementsStruct, traveller.elementManagementPassenger.elementReference.number as :string) != null
+			,
+			(ETicketNumber: pnrView.dataElementsMaster.dataElementsStruct[0].ticketDocumentData.tktNumber.documentDetails.number) 
+			when pnrView.dataElementsMaster.dataElementsStruct[0].ticketDocumentData.tktNumber.documentDetails.number?
+//			,
+//			Connections: pnrView.originDestinationDetails.itineraryInfo map {
+////				CodeSharePartnerInfo: {
+////					BoardPoint: $.codeSharePartnerInfo.codeSharePartner.boardPointDetails.trueLocationId,
+////					OffPoint: $.codeSharePartnerInfo.codeSharePartner.offpointDetails.trueLocationId,
+////					CarrierCode: $.codeSharePartnerInfo.codeSharePartner.companyDetails.carrierCode,
+////					FlightNumber: $.codeSharePartnerInfo.codeSharePartner.flightIdentification.flightNumber,
+////					ClassOfService: $.codeSharePartnerInfo.codeSharePartner.flightIdentification.bookingClass,
+////					FlightIndicator: $.codeSharePartnerInfo.codeSharePartner.flightTypeDetails.flightIndicator,
+////					CodeShareAgreement: $.codeSharePartnerInfo.codeShareDetails.codeShareAgreement,
+////					CabinCode: $.codeSharePartnerInfo.codeSharePartnerInventoryData.cabinInformation.cabinCode
+////				}
+//			}
+		}))))
+		
+		}
+	
+	)
+		
+		
+		
+		
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </flow></mule>

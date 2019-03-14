@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="processRequest">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/qby0800" doc:name="HTTP"/>
+        <choice doc:name="Choice">
+            <when expression="#[flowVars.origPayload]">
+                <logger message="origPayload exists" level="INFO" doc:name="Logger"/>
+                <set-payload value="#[flowVars.origPayload]" doc:name="Set Payload - flowVars.origPayload"/>
+            </when>
+            <otherwise>
+                <logger message="origPayload does not exist" level="INFO" doc:name="Logger"/>
+                <set-payload value="#[[    {   &quot;QueueList&quot;: {     &quot;targetOffice&quot;: {    &quot;sourceType&quot;: {      &quot;sourceQualifier1&quot;: &quot;3&quot;    },        &quot;originatorDetails&quot;: {         &quot;inHouseIdentification1&quot;: &quot;LIST0101&quot;        }     },     &quot;queueNumber&quot;: {       &quot;queueDetails&quot;: {         &quot;number&quot;: 1       }     },     &quot;categoryDetails&quot;: {        &quot;subQueueInfoDetails&quot;: {         &quot;identificationType&quot;: &quot;C&quot;,         &quot;itemNumber&quot;: &quot;21&quot;          }        }     }  }  ]]" doc:name="Set Payload - set payload (fake passed in)"/>
+                <dw:transform-message doc:name="Transform Message">
+                    <dw:input-payload doc:sample="sample_data/UserDefined_6.dwl"/>
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((object, idx) -> {
+	QueueList: {
+		targetOffice: {
+			sourceType: {
+				sourceQualifier1: "3"
+			},
+		originatorDetails: {
+			(using(originator = object.QueueList.targetOffice.originatorDetails) {
+			 inHouseIdentification1: originator.inHouseIdentification1	
+			})
+		}
+	  },
+	  queueNumber: {
+	  	queueDetails: {
+	  		number: object.QueueList.queueNumber.queueDetails.number
+	  	}
+	  },
+	  categoryDetails: {
+	  	subQueueInfoDetails: {
+	  		identificationType: "C",
+	  		itemNumber: object.QueueList.categoryDetails.subQueueInfoDetails.itemNumber
+	  	}
+	  }
+	}
+})]]></dw:set-payload>
+                    <dw:set-variable variableName="origPayload"><![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((object, idx) -> {
+	QueueList: {
+		targetOffice: {
+			sourceType: {
+				sourceQualifier1: "3"
+			},
+		originatorDetails: {
+			(using(originator = object.QueueList.targetOffice.originatorDetails) {
+			 inHouseIdentification1: originator.inHouseIdentification1	
+			})
+		}
+	  },
+	  queueNumber: {
+	  	queueDetails: {
+	  		number: object.QueueList.queueNumber.queueDetails.number
+	  	}
+	  },
+	  categoryDetails: {
+	  	subQueueInfoDetails: {
+	  		identificationType: "C",
+	  		itemNumber: object.QueueList.categoryDetails.subQueueInfoDetails.itemNumber
+	  	}
+	  }
+	}
+})]]></dw:set-variable>
+                </dw:transform-message>
+            </otherwise>
+        </choice>
+        <choice doc:name="increment mech to facilitate exiting flow">
+            <when expression="#[flowVars.testCounter]">
+                <logger message="testCounter exists" level="INFO" doc:name="Logger"/>
+                <set-variable variableName="testCounter" value="#[flowVars.testCounter + 1]" doc:name="testCounter"/>
+            </when>
+            <otherwise>
+                <set-variable variableName="testCounter" value="#[1]" doc:name="testCounter"/>
+                <set-variable variableName="itemArray" value="#[[]]" doc:name="itemArray"/>
+            </otherwise>
+        </choice>
+        <logger message="Fake call to altea" level="INFO" doc:name="FakeCall to Altea"/>
+        <flow-ref name="processResponse2" doc:name="processResponse2"/>
+    </flow>
+    <flow name="processResponse2">
+        <dw:transform-message doc:name="fake response from s-layer">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+[
+  {
+    "QueueListReply": {
+      "queueView": {
+        "agent": {
+          "originatorDetails": {
+            "inHouseIdentification1": "NCE1A0990"
+          }
+        },
+        "queueNumber": {
+          "queueDetails": {
+            "number": 1
+          }
+        },
+        "categoryDetails": {
+          "subQueueInfoDetails": {
+            "identificationType": "C",
+            "itemNumber": "21"
+          }
+        },
+        "pnrCount": [
+          {
+            "quantityDetails": {
+              "numberOfUnit": 1
+            }
+          }
+        ],
+        "item": [
+          {
+            "paxName": {
+              "paxDetails": {
+                "surname": "TEST1",
+                "type": "0",
+                "quantity": 1
+              }
+            },
+            "recLoc": {
+              "reservation": {
+                "controlNumber": "ABC123"
+              }
+            },
+            "segment": {
+              "flightDate": {
+                "departureDate": "04MAY19"
+              },
+              "boardPointDetails": {
+                "trueLocation": "DAL"
+              },
+              "offpointDetails": {
+                "trueLocation": "HOU"
+              },
+              "companyDetails": {
+                "marketingCompany": "AC"
+              },
+              "flightIdentification": {
+                "flightNumber": "112",
+                "operationalSuffix": "AC"
+              }
+            },
+            "agent": {
+              "originatorDetails": {
+                "inHouseIdentification1": "NCE1A0990",
+                "inHouseIdentification2": "WS"
+              }
+            },
+            "pnrdates": [
+              {
+                "timeMode": "700",
+                "dateTime": "2019-01-01T14:53:00"
+              }
+            ]
+          },
+          {
+            "paxName": {
+              "paxDetails": {
+                "surname": "TEST1",
+                "type": "0",
+                "quantity": 1
+              }
+            },
+            "recLoc": {
+              "reservation": {
+                "controlNumber": "ABC123"
+              }
+            },
+            "segment": {
+              "flightDate": {
+                "departureDate": "04MAY19"
+              },
+              "boardPointDetails": {
+                "trueLocation": "DAL"
+              },
+              "offpointDetails": {
+                "trueLocation": "HOU"
+              },
+              "companyDetails": {
+                "marketingCompany": "AC"
+              },
+              "flightIdentification": {
+                "flightNumber": "112",
+                "operationalSuffix": "AC"
+              }
+            },
+            "agent": {
+              "originatorDetails": {
+                "inHouseIdentification1": "NCE1A0990",
+                "inHouseIdentification2": "WS"
+              }
+            },
+            "pnrdates": [
+              {
+                "timeMode": "700",
+                "dateTime": "2019-01-01T14:53:00"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]]]></dw:set-payload>
+        </dw:transform-message>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <foreach collection="payload[0].QueueListReply.queueView.item" doc:name="For Each QueueListReply.queueView.item">
+            <expression-filter expression="#[flowVars.itemArray.add(payload)]" doc:name="Expression"/>
+        </foreach>
+        <logger level="INFO" doc:name="Logger"/>
+        <choice doc:name="fake check for errorcode - EOF">
+            <when expression="#[flowVars.testCounter == 3]">
+                <logger message="testCounter == 3" level="INFO" doc:name="Logger"/>
+                <dw:transform-message doc:name="set java array to json array">
+                    <dw:set-variable variableName="jsonItemsArray"><![CDATA[%dw 1.0
+%output application/json
+---
+flowVars.itemArray]]></dw:set-variable>
+                </dw:transform-message>
+                <logger level="INFO" doc:name="Logger"/>
+                <flow-ref name="createResponse" doc:name="createResponse"/>
+            </when>
+            <otherwise>
+                <flow-ref name="processRequest" doc:name="Flow Reference"/>
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="createResponse">
+        <logger level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <dw:transform-message doc:name="Transform Message" metadata:id="59cdd6ff-91ba-4985-969a-d3d7bf7bf295">
+            <dw:input-payload doc:sample="fvQby0800-example.json" mimeType="application/json"/>
+            <dw:input-variable mimeType="application/json" variableName="jsonItemsArray" doc:sample="itemsArray-sample-json.json"/>
+            <dw:input-variable variableName="itemArray"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+
+%function getYear(d) 
+	(
+		//d as :datetime as :string {format: "yyyy/MM/dd"}
+		(d as :datetime).year
+	)
+	
+%function getMonth(d)
+	( (d as :datetime).month
+		
+	)
+
+%function getDay(d)
+	(
+		(d as :datetime).day
+	)
+	
+%function getHour(d)
+	(
+		(d as :datetime).hour
+	)
+	
+%function getMinutes(d)
+	(
+		(d as :datetime).minutes
+	)
+
+
+%output application/json
+---
+payload map ((obj, idx) -> {
+	QueueListReply: {
+		queueView: {
+			queueNumber: {
+				queueDetails: {
+					number: obj.QueueListReply.queueView.queueNumber.queueDetails.number
+				}
+			},
+			categoryDetails: {
+				subQueueInfoDetails: {
+					itemNumber: obj.QueueListReply.queueView.categoryDetails.subQueueInfoDetails.itemNumber
+				}
+			}
+			,
+			item: (flowVars.jsonItemsArray map (item, idx) -> {
+				recLoc: {
+					reservation: {
+						controlNumber: item.recLoc.reservation.controlNumber
+					}
+				},
+				segment: {
+					flightDate: {
+						departureDate: item.segment.flightDate.departureDate
+					},
+					boardPointDetails: {
+						trueLocation: item.segment.boardPointDetails.trueLocation
+					},
+					offpointDetails: {
+						trueLocation: item.segment.offpointDetails.trueLocation
+					},
+					companyDetails: {
+						marketingCompany: item.segment.companyDetails.marketingCompany
+					},
+					flightIdentification: {
+						flightNumber: item.segment.flightIdentification.flightNumber,
+						operationalSuffix: item.segment.flightIdentification.operationalSuffix
+					}
+				},
+				pnrdates: (item.pnrdates map (pnr, pIdx) -> {
+					timeMode: pnr.timeMode,
+					dateTime: {
+						year: getYear(pnr.dateTime),
+						month: getMonth(pnr.dateTime),
+						day: getDay(pnr.dateTime),
+						hour: getHour(pnr.dateTime),
+						minutes: getMinutes(pnr.dateTime)
+					}
+				})
+			})
+		}
+		
+	}
+})  ]]></dw:set-payload>
+        </dw:transform-message>
+        <logger level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="processResponse">
+        <logger level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="fake response from s-layer">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+[{
+ 	"QueueListReply": {
+ 		"queueView": {
+ 			"agent": {
+ 				"originatorDetails": {
+ 					"inHouseIdentification1": "NCE1A0990"
+ 				}
+
+ 			},
+ 			"queueNumber": {
+ 				"queueDetails": {
+ 					"number": 1
+ 				}
+ 			},
+ 			"categoryDetails": {
+ 				"subQueueInfoDetails": {
+ 					"identificationType": "C",
+ 					"itemNumber": "21"
+ 				}
+ 			},
+ 			"pnrCount": [{
+ 				"quantityDetails": {
+ 					"numberOfUnit": 1
+ 				}
+ 			}],
+ 			"item": [{
+ 				"paxName": {
+ 					"paxDetails": {
+ 						"surname": "TEST1",
+ 						"type": "0",
+ 						"quantity": 1
+ 					}
+ 				},
+ 				"recLoc": {
+ 					"reservation": {
+ 						"controlNumber": "ABC123"
+ 					}
+ 				},
+ 				"segment": {
+ 					"flightDate": {
+ 						"departureDate": "04MAY19"
+ 					},
+ 					"boardPointDetails": {
+ 						"trueLocation": "DAL"
+ 					},
+ 					"offpointDetails": {
+ 						"trueLocation": "HOU"
+ 					},
+ 					"companyDetails": {
+ 						"marketingCompany": "AC"
+ 					},
+ 					"flightIdentification": {
+ 						"flightNumber": "112",
+ 						"operationalSuffix": "AC"
+ 					}
+ 				},
+ 				"agent": {
+ 					"originatorDetails": {
+ 						"inHouseIdentification1": "NCE1A0990",
+ 						"inHouseIdentification2": "WS"
+ 					}
+ 				},
+ 				"pnrdates": [{
+ 					"timeMode": "700",
+ 					"dateTime": "2019-01-01T14:53:00"
+ 				}]
+ 			}]
+ 		}
+ 	}
+ }]]]></dw:set-payload>
+        </dw:transform-message>
+        <choice doc:name="Choice">
+            <when expression="#[flowVars.qby0800Response]">
+                <logger message="#[flowVars.qby0800Response]" level="INFO" doc:name="Logger"/>
+                <dw:transform-message doc:name="Transform Message" metadata:id="7a732467-0607-4fbd-ab68-0c5ad8d43c82">
+                    <dw:input-payload doc:sample="fvQby0800-example.json" mimeType="application/json"/>
+                    <dw:input-variable doc:sample="fvQby0800-example.json" mimeType="application/json" variableName="qby0800Response"/>
+                    <dw:set-variable variableName="qby0800Response"><![CDATA[%dw 1.0
+
+%function getYear(d) 
+	(
+		(d as :datetime).year
+	)
+	
+%function getMonth(d)
+	( (d as :datetime).month
+		
+	)
+
+%function getDay(d)
+	(
+		(d as :datetime).day
+	)
+	
+%function getHour(d)
+	(
+		(d as :datetime).hour
+	)
+	
+%function getMinutes(d)
+	(
+		(d as :datetime).minutes
+	)
+
+
+%function addToItems()
+	payload.QueueListReply.queueView.item map ((payitem, idx) -> {
+		 (item: {
+			recLoc: {
+				reservation: {
+					controlNumber: payitem.recLoc.reservation.controlNumber[0]
+				}
+			},
+			segment: {
+				flightDate: {
+					departureDate: payitem.segment.flightDate.departureDate[0]
+				},
+				boardPointDetails: {
+					trueLocation: payitem.segment.boardPointDetails.trueLocation[0]
+				},
+				offpointDetails: {
+					trueLocation: payitem.segment.offpointDetails.trueLocation[0]
+				},
+				companyDetails: {
+					marketingCompany: payitem.segment.companyDetails.marketingCompany[0]
+				},
+				flightIdentification: {
+					flightNumber: payitem.segment.flightIdentification.flightNumber[0],
+					operationalSuffix: payitem.segment.flightIdentification.operationalSuffix[0]
+				}
+			},
+			pnrdates: payitem.pnrdates map (pnr, idx) -> {
+				timeMode: pnr.timeMode[0],
+				dateTime: {
+					year: getYear(pnr.dateTime[0]),
+					month: getMonth(pnr.dateTime[0]),
+					day: getDay(pnr.dateTime[0]),
+					hour: getHour(pnr.dateTime[0]),
+					minutes: getMinutes(pnr.dateTime[0])
+				}
+			}
+		}) 
+		
+		
+	})
+
+
+%output application/json
+---
+flowVars.qby0800Response map ((obj, idx) -> {
+	QueueListReply: {
+		queueView: {
+			queueNumber: {
+				queueDetails: {
+					number: obj.QueueListReply.queueView.queueNumber.queueDetails.number
+				}
+			},
+			categoryDetails: {
+				subQueueInfoDetails: {
+					itemNumber: obj.QueueListReply.queueView.categoryDetails.subQueueInfoDetails.itemNumber
+				}
+			}
+		},
+		item: (obj.QueueListReply.queueView.item ++ addToItems())
+	}
+})
+
+
+
+
+
+
+
+
+
+
+
+]]></dw:set-variable>
+                </dw:transform-message>
+            </when>
+            <otherwise>
+                <dw:transform-message doc:name="Transform Message" metadata:id="23ad8f26-4c60-43e4-86fa-29cb80718374">
+                    <dw:input-payload doc:sample="qby-0800-reply-sample-json.json" mimeType="application/json"/>
+                    <dw:input-variable mimeType="application/json" variableName="qby0800Response"/>
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+                    <dw:set-variable resource="classpath:qby0800-response.dwl" variableName="qby0800Response"/>
+                </dw:transform-message>
+            </otherwise>
+        </choice>
+        <logger message="testCounter = #[flowVars.testCounter]" level="INFO" doc:name="Logger"/>
+        <choice doc:name="fake check for errorcode - EOF">
+            <when expression="#[flowVars.testCounter == 3]">
+                <logger message="testCounter == 3" level="INFO" doc:name="Logger"/>
+            </when>
+            <otherwise>
+                <flow-ref name="processRequest" doc:name="Flow Reference"/>
+            </otherwise>
+        </choice>
+    </flow>
+</mule>

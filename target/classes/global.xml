@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:context="http://www.springframework.org/schema/context" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd">
+ 
+ <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+ <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8081" connectionIdleTimeout="1000" responseTimeout="100000" doc:name="HTTP Request Configuration"/>
+    <context:property-placeholder location="app-DEV.properties"/>
+    <http:request-config name="HTTP_Request_United_REST" host="${united.host}" port="80" doc:name="HTTP Request Configuration"/>
+    <http:request-config name="HTTP_Request_American" host="training4-american-ws.cloudhub.io" port="80" basePath="/api" doc:name="HTTP Request Configuration"/>
+    
+    
+    <configuration defaultExceptionStrategy-ref="getunitedflightinfoChoice_Exception_Strategy" doc:name="Configuration">
+        
+        <expression-language>
+        		<global-functions>
+        			def getNumSeats(type) {
+        				if(type.contains('737')) {
+        					return 150;
+        				} else {
+        					return 300;
+        				}
+        			}
+        		</global-functions>
+        </expression-language>
+    </configuration>
+    
+    
+	 <choice-exception-strategy name="getunitedflightinfoChoice_Exception_Strategy" >
+	        <catch-exception-strategy when="#[exception.causeMatches('org.mule.api.MessagingException')]" doc:name="INTEGER Validation failed">
+	            <logger message="ERROR in testError flow  #[exception.getDetailedMessage()]" level="INFO" doc:name="Logger"/>
+	            <set-payload value="ISSUE with FLIGHT to #[flowVars.code + '\n' + exception]" doc:name="Set Payload"/>
+	            <set-property propertyName="http.status" value="#[400]" doc:name="Property"/>
+	        </catch-exception-strategy>
+	        <catch-exception-strategy doc:name="Catch Exception Strategy - Catch Other Errors">
+	            <set-payload value="#['OTHER Exception occured \n' + exception]" doc:name="Set Payload"/>
+	            <set-property propertyName="http.status" value="#[500]" doc:name="Property"/>
+	            <logger level="INFO" doc:name="Logger"/>
+	        </catch-exception-strategy>
+    </choice-exception-strategy>
+</mule>

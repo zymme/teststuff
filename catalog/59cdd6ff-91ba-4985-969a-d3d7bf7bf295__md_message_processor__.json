@@ -1,0 +1,18 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "fvQBY0800Response"
+        },
+        "flowVariables": {
+            "jsonItemsArray": {
+                "connectorName": "#_custom_mule_metadata_type_#",
+                "typeId": "itemsArray_json"
+            },
+            "itemArray": {}
+        }
+    },
+    "outputMessageMetadata": {},
+    "id": "59cdd6ff-91ba-4985-969a-d3d7bf7bf295",
+    "version": "5.2.0.0"
+}

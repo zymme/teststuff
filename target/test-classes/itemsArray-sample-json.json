@@ -1,0 +1,266 @@
+[
+  {
+    "paxName": {
+      "paxDetails": {
+        "surname": "TEST1",
+        "type": "0",
+        "quantity": 1
+      }
+    },
+    "recLoc": {
+      "reservation": {
+        "controlNumber": "ABC123"
+      }
+    },
+    "segment": {
+      "flightDate": {
+        "departureDate": "04MAY19"
+      },
+      "boardPointDetails": {
+        "trueLocation": "DAL"
+      },
+      "offpointDetails": {
+        "trueLocation": "HOU"
+      },
+      "companyDetails": {
+        "marketingCompany": "AC"
+      },
+      "flightIdentification": {
+        "flightNumber": "112",
+        "operationalSuffix": "AC"
+      }
+    },
+    "agent": {
+      "originatorDetails": {
+        "inHouseIdentification1": "NCE1A0990",
+        "inHouseIdentification2": "WS"
+      }
+    },
+    "pnrdates": [
+      {
+        "timeMode": "700",
+        "dateTime": "2019-01-01T14:53:00"
+      }
+    ]
+  },
+  {
+    "paxName": {
+      "paxDetails": {
+        "surname": "TEST1",
+        "type": "0",
+        "quantity": 1
+      }
+    },
+    "recLoc": {
+      "reservation": {
+        "controlNumber": "ABC123"
+      }
+    },
+    "segment": {
+      "flightDate": {
+        "departureDate": "04MAY19"
+      },
+      "boardPointDetails": {
+        "trueLocation": "DAL"
+      },
+      "offpointDetails": {
+        "trueLocation": "HOU"
+      },
+      "companyDetails": {
+        "marketingCompany": "AC"
+      },
+      "flightIdentification": {
+        "flightNumber": "112",
+        "operationalSuffix": "AC"
+      }
+    },
+    "agent": {
+      "originatorDetails": {
+        "inHouseIdentification1": "NCE1A0990",
+        "inHouseIdentification2": "WS"
+      }
+    },
+    "pnrdates": [
+      {
+        "timeMode": "700",
+        "dateTime": "2019-01-01T14:53:00"
+      }
+    ]
+  },
+  {
+    "paxName": {
+      "paxDetails": {
+        "surname": "TEST1",
+        "type": "0",
+        "quantity": 1
+      }
+    },
+    "recLoc": {
+      "reservation": {
+        "controlNumber": "ABC123"
+      }
+    },
+    "segment": {
+      "flightDate": {
+        "departureDate": "04MAY19"
+      },
+      "boardPointDetails": {
+        "trueLocation": "DAL"
+      },
+      "offpointDetails": {
+        "trueLocation": "HOU"
+      },
+      "companyDetails": {
+        "marketingCompany": "AC"
+      },
+      "flightIdentification": {
+        "flightNumber": "112",
+        "operationalSuffix": "AC"
+      }
+    },
+    "agent": {
+      "originatorDetails": {
+        "inHouseIdentification1": "NCE1A0990",
+        "inHouseIdentification2": "WS"
+      }
+    },
+    "pnrdates": [
+      {
+        "timeMode": "700",
+        "dateTime": "2019-01-01T14:53:00"
+      }
+    ]
+  },
+  {
+    "paxName": {
+      "paxDetails": {
+        "surname": "TEST1",
+        "type": "0",
+        "quantity": 1
+      }
+    },
+    "recLoc": {
+      "reservation": {
+        "controlNumber": "ABC123"
+      }
+    },
+    "segment": {
+      "flightDate": {
+        "departureDate": "04MAY19"
+      },
+      "boardPointDetails": {
+        "trueLocation": "DAL"
+      },
+      "offpointDetails": {
+        "trueLocation": "HOU"
+      },
+      "companyDetails": {
+        "marketingCompany": "AC"
+      },
+      "flightIdentification": {
+        "flightNumber": "112",
+        "operationalSuffix": "AC"
+      }
+    },
+    "agent": {
+      "originatorDetails": {
+        "inHouseIdentification1": "NCE1A0990",
+        "inHouseIdentification2": "WS"
+      }
+    },
+    "pnrdates": [
+      {
+        "timeMode": "700",
+        "dateTime": "2019-01-01T14:53:00"
+      }
+    ]
+  },
+  {
+    "paxName": {
+      "paxDetails": {
+        "surname": "TEST1",
+        "type": "0",
+        "quantity": 1
+      }
+    },
+    "recLoc": {
+      "reservation": {
+        "controlNumber": "ABC123"
+      }
+    },
+    "segment": {
+      "flightDate": {
+        "departureDate": "04MAY19"
+      },
+      "boardPointDetails": {
+        "trueLocation": "DAL"
+      },
+      "offpointDetails": {
+        "trueLocation": "HOU"
+      },
+      "companyDetails": {
+        "marketingCompany": "AC"
+      },
+      "flightIdentification": {
+        "flightNumber": "112",
+        "operationalSuffix": "AC"
+      }
+    },
+    "agent": {
+      "originatorDetails": {
+        "inHouseIdentification1": "NCE1A0990",
+        "inHouseIdentification2": "WS"
+      }
+    },
+    "pnrdates": [
+      {
+        "timeMode": "700",
+        "dateTime": "2019-01-01T14:53:00"
+      }
+    ]
+  },
+  {
+    "paxName": {
+      "paxDetails": {
+        "surname": "TEST1",
+        "type": "0",
+        "quantity": 1
+      }
+    },
+    "recLoc": {
+      "reservation": {
+        "controlNumber": "ABC123"
+      }
+    },
+    "segment": {
+      "flightDate": {
+        "departureDate": "04MAY19"
+      },
+      "boardPointDetails": {
+        "trueLocation": "DAL"
+      },
+      "offpointDetails": {
+        "trueLocation": "HOU"
+      },
+      "companyDetails": {
+        "marketingCompany": "AC"
+      },
+      "flightIdentification": {
+        "flightNumber": "112",
+        "operationalSuffix": "AC"
+      }
+    },
+    "agent": {
+      "originatorDetails": {
+        "inHouseIdentification1": "NCE1A0990",
+        "inHouseIdentification2": "WS"
+      }
+    },
+    "pnrdates": [
+      {
+        "timeMode": "700",
+        "dateTime": "2019-01-01T14:53:00"
+      }
+    ]
+  }
+]

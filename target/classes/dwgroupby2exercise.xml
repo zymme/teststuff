@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <file:connector name="File" autoDelete="true" streaming="true" validateConnections="true" doc:name="File"/>
+    <flow name="dwGetCSVFileFlow">
+        <file:inbound-endpoint path="/Users/davezimmer/Desktop/files/dwExercises/input" moveToPattern="#[message.inboundProperties['originalFilename']]" moveToDirectory="/Users/davezimmer/Desktop/files/dwExercises/processed" responseTimeout="10000" doc:name="File" connector-ref="File">
+            <file:filename-regex-filter pattern=".*csv" caseSensitive="true"/>
+        </file:inbound-endpoint>
+        <dw:transform-message doc:name="Transform Message" metadata:id="d4ea09b6-2795-4843-a563-25a2dd1fa9e8">
+            <dw:input-payload doc:sample="invoices_example.csv" mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((payload01 , indexOfPayload01) -> {
+	invoiceId: payload01.invoiceId,
+	vendorName: payload01.vendorName,
+	total: payload01.Total,
+	lineItems: [{
+		item: payload01.lineItem,
+		amount: payload01.lineItemAmount
+	}]
+})]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <logger message="#[exception.getDetailedMessage()]" level="INFO" doc:name="Logger"/>
+        </catch-exception-strategy>
+    </flow>
+    <flow name="dwgroupby2exerciseFlow">
+        <dw:transform-message doc:name="Transform Message" metadata:id="52a535e7-d442-4779-bbec-9c211de47a58">
+            <dw:input-payload doc:sample="merchants_example_json.json" mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+
+//(sizeOf (payload[0].merchantName))
+
+payload groupBy ("true" when ( sizeOf ($.merchantName) ) < 10 otherwise "false")]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwgroupby2exerciseFlow1">
+        <set-payload value="#[
+[
+  {&quot;dev&quot;:  1},
+  {&quot;qa&quot;:   2},
+  {&quot;prod&quot;: 3}
+]
+]" doc:name="Set Payload - list of objects"/>
+        <dw:transform-message doc:name="xform json arr of objects to single object">
+            <dw:input-payload doc:sample="sample_data/UserDefined_3.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+({
+	(payload map (obj, idx) -> {
+		(obj)
+	})
+})]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+</mule>

@@ -1,0 +1,14 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {},
+        "flowVariables": {
+            "qby0800Response": {
+                "connectorName": "#_custom_mule_metadata_type_#",
+                "typeId": "fvQBY0800Response"
+            }
+        }
+    },
+    "outputMessageMetadata": {},
+    "id": "013274b6-9383-4d63-8bf8-1cdbb5cf75d2",
+    "version": "5.2.0.0"
+}

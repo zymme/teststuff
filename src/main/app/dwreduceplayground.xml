@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="dwreduceplaygroundFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/reduce1" doc:name="HTTP"/>
+        <set-payload value="#[[ 1, 2, 3, 4 ]]" doc:name="[ 1, 2, 3, 4 ]"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/list_double_3.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+//log ( 'acc = ', acc) + log( 'curVal = ', curVal )
+%var input = [1,2,3,4]
+
+
+%output application/java
+---
+input reduce ( (curVal, acc = 0) -> 
+	acc + curVal
+)]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwReduce2">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/reduce2" doc:name="HTTP"/>
+        <set-payload value="#[[1,2,3,4,5]]" doc:name="[1,2,3,4,5]"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/list_double_4.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+//
+//log('acc = ', {odd: (acc.odd + curVal unless isEven(curVal) otherwise acc.odd), 
+//		           even: (acc.even + curVal when isEven(curVal) otherwise acc.even)
+//	})
+
+%var input = [1, 2, 3, 4, 5, 6]
+
+%function isEven (n) ( (n mod 2) == 0)
+
+%output application/json
+---
+input reduce ( (curVal, acc = { even: 0, odd: 0 } ) -> 
+	 {odd: (acc.odd + curVal unless isEven(curVal) otherwise acc.odd), 
+		           even: (acc.even + curVal when isEven(curVal) otherwise acc.even)
+	}
+)]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="reduceOnArrayOfRecords">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/reduce3" doc:name="HTTP"/>
+        <set-payload value="#[[
+  {
+    &quot;merchant&quot; : &quot;Casita Azul&quot;,
+    &quot;amount&quot;   : 51.70
+  },
+  {
+    &quot;merchant&quot; : &quot;High Wire Airlines&quot;,
+    &quot;amount&quot;   : 378.80
+  },
+  {
+    &quot;merchant&quot; : &quot;Generic Fancy Hotel Chain&quot;,
+    &quot;amount&quot;   : 555.33
+  },
+  {
+    &quot;merchant&quot; : &quot;High Wire Airlines&quot;,
+    &quot;amount&quot;   : 288.88
+  }
+]]" doc:name="Set Array of objects Payload"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/UserDefined_4.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+
+%var input = [
+  {
+    "merchant" : "Casita Azul",
+    "amount"   : 51.70
+  },
+  {
+    "merchant" : "High Wire Airlines",
+    "amount"   : 378.80
+  },
+  {
+    "merchant" : "Generic Fancy Hotel Chain",
+    "amount"   : 555.33
+  },
+  {
+    "merchant" : "High Wire Airlines",
+    "amount"   : 288.88
+  }
+]
+
+%var threshHold = 100
+
+%function overThreshHold(n) n > 100
+
+
+
+%output application/json
+---
+input reduce ( (curVal, acc = {count:0, merchants: [] } ) -> {
+	count: acc.count + 1,
+	merchants: acc.merchants + curVal.merchant unless acc.merchants contains curVal.merchant 
+	otherwise acc.merchants
+} when overThreshHold( curVal.amount ) otherwise acc ) 
+
+
+
+
+
+
+
+]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwReduceFunctionUse">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/reduce4" doc:name="HTTP"/>
+        <set-payload value="#[[
+  {
+    &quot;merchant&quot; : &quot;Casita Azul&quot;,
+    &quot;amount&quot;   : 51.70
+  },
+  {
+    &quot;merchant&quot; : &quot;High Wire Airlines&quot;,
+    &quot;amount&quot;   : 378.80
+  },
+  {
+    &quot;merchant&quot; : &quot;Generic Fancy Hotel Chain&quot;,
+    &quot;amount&quot;   : 555.33
+  },
+  {
+    &quot;merchant&quot; : &quot;High Wire Airlines&quot;,
+    &quot;amount&quot;   : 288.88
+  }
+]]" doc:name="Set Payload of Array of Records"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/UserDefined_5.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+
+%var input = [
+  {
+    "merchant" : "Casita Azul",
+    "amount"   : 51.70
+  },
+  {
+    "merchant" : "High Wire Airlines",
+    "amount"   : 378.80
+  },
+  {
+    "merchant" : "Generic Fancy Hotel Chain",
+    "amount"   : 555.33
+  },
+  {
+    "merchant" : "High Wire Airlines",
+    "amount"   : 288.88
+  }
+]
+
+%var threshHold = 100
+
+
+%function countBy(arr, predicate) 
+
+  arr reduce ( (curVal, acc = 0) ->
+  	acc + 1 when predicate(curVal) otherwise acc
+  )
+
+
+%output application/json
+---
+{
+	count: countBy(input, ( (obj) -> obj.amount > threshHold ))
+}
+
+
+
+
+
+
+
+
+
+]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwReduceFunctionUse2">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/reduce5" doc:name="HTTP"/>
+        <set-payload value="#[[&quot;hello&quot;, &quot;hi&quot;, &quot;hey&quot;]]" doc:name="Set Payload String Array"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/list_string_1.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+
+// this use of reduce, takes the arrays and compares the strings to see which 
+// is the largest, the end result will be the largest string in the array
+
+%var input = ["yello", "hi", "hey", "Bobsburgers", "FreddyisCool"]
+%var input2 = [ "Tigers", "Elep", "yo", "Salut!1"]
+
+%function maxBy(arr, predicate)
+	arr reduce ($ when predicate($, $$)  otherwise $$)
+
+
+%output application/json
+---
+{
+	max: maxBy(input, ((v, c) -> (sizeOf v) > (sizeOf c) )),
+	max2: maxBy(input2, ( (v, c) -> (sizeOf v) > (sizeOf c) ))
+}
+	]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwreduceplaygroundFlow1">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/reduce6" doc:name="HTTP"/>
+        <set-payload value="#[[1,2,3,4,5]]" doc:name="Set Payload [1,2,3,4,5]"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/list_double_5.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+// This reduce goes through the input array, finds numbers that are not even, 
+// multiplies them by 100 and stores them in the resulting output array
+%var outputArray = []
+
+%output application/json
+
+---
+payload reduce ( (curVal, acc = outputArray) ->
+	acc + (curVal*100) when ( (curVal mod 2) != 0) otherwise acc
+)]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwReduceTrueFalseArrayOutput">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/reduce7" doc:name="HTTP"/>
+        <set-payload value="#[[1,2,3,4]]" doc:name="Set Payload [1,2,3,4]"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/list_double_6.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+
+
+%var outputArray = [[], []]
+
+%var input = ["1", "2", "3"]
+
+
+%function partition(arr)
+	arr reduce ( (curVal, acc = [] ) -> 
+		
+		acc + curVal when (curVal mod 2) == 0 otherwise acc 
+		
+	)
+	
+	
+	
+%function evens(arr)
+   (arr filter  ($ mod 2) == 0)
+
+%function odds(arr)
+	(arr filter ($ mod 2) != 0)
+
+
+%output application/json
+---
+//evens(payload)
+[
+	evens(payload),
+	odds(payload)
+]
+
+
+
+]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+</mule>

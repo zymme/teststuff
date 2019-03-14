@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "minirule_getfromrecreply_json"
+        }
+    },
+    "outputMessageMetadata": {},
+    "id": "e63d83e5-4ad5-4530-8ada-56e1562cfde8",
+    "version": "5.2.0.0"
+}

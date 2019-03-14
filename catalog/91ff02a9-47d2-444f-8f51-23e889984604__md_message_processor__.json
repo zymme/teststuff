@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "pnr-passengersbyflight-json"
+        }
+    },
+    "outputMessageMetadata": {},
+    "id": "91ff02a9-47d2-444f-8f51-23e889984604",
+    "version": "5.2.0.0"
+}

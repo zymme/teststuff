@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="dwtesterPostFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/flights" allowedMethods="POST" doc:name="HTTP"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="dfb1a5e3-b0a3-4a26-aea1-a23f61851b42">
+            <dw:input-payload doc:sample="flight-example.json" mimeType="application/json"/>
+            <dw:set-payload resource="classpath:flight_json_playground.dwl"/>
+            <dw:set-variable variableName="xml"><![CDATA[%dw 1.0
+%output application/xml
+---
+flight @(airline:payload.airline): {
+		
+		code: payload.flightCode,
+		from: payload.fromAirportCode,
+		to: payload.toAirportCode,
+		departure: payload.departureDate,
+		price: payload.price
+	}]]></dw:set-variable>
+        </dw:transform-message>
+        <logger level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="postMultipleFlightsFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/multipleFlights" allowedMethods="POST" doc:name="HTTP"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="7abeeca3-27a1-46b5-8b9c-42fa05e3a628">
+            <dw:input-payload doc:sample="flights-example.xml" mimeType="application/xml"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+%namespace ns0 http://soap.training.mulesoft.com/
+
+%type currency = :string {format: "###.00"}
+%type flights = :object {class: "com.mulesoft.training.Flight" }
+
+%function totSeats(planeType) {
+	
+	totalSeats: 150 when planeType contains "737" otherwise 300
+	
+}
+    
+%function totSeats2(planeType) ( 150 when planeType contains "737" otherwise 300)
+
+
+
+---
+flights: payload.ns0#listAllFlightsResponse.*return map {
+	
+		destination: $.destination,
+		price: $.price as :number as :currency,
+		planeType: upper $.planeType replace /(BOING)/ with "BOEING",
+		departureDate: $.departureDate as :date {format: "yyyy/MM/dd"} as :string {format: "MMM, dd, yyyy"},
+		availableSeats: $.emptySeats as :number,
+		totalSeats: totSeats($.planeType),
+		moreSeats: totSeats2($.planeType)
+		//totalSeats: getNumSeats($.planeType)
+	    // - lookup a flow similar to getting totalSeats above
+	   // totalSeats: lookup("getTotalSeatsFlow", {type: $.planeType})
+} 
+ 
+ ]]></dw:set-payload>
+        </dw:transform-message>
+        <logger level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="getTotalSeatsFlow">
+        <logger level="INFO" doc:name="Logger"/>
+        <expression-component doc:name="Expression"><![CDATA[if(payload.type.contains('737')) {
+  payload =150;
+} else {
+  payload = 300;
+ }]]></expression-component>
+    </flow>
+    <flow name="massiveJSONFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/crazydw" allowedMethods="POST" doc:name="HTTP"/>
+        <logger message="#[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="e63d83e5-4ad5-4530-8ada-56e1562cfde8">
+            <dw:input-payload doc:sample="Sample_data.json" mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+//(payload.MiniRule_GetFromRecReply.mnrByPricingRecord) map (object, index) -> {
+//	parent: object.pricingRecordId.uniqueReference,
+//	
+//}
+---
+payload.MiniRule_GetFromRecReply.mnrByPricingRecord map ((mnrByPricingRecord, idx) -> {
+	
+	parent: mnrByPricingRecord.pricingRecordId.uniqueReference, 
+	child: mnrByPricingRecord.mnrRulesInfoGrp filter ($.mnrCatInfo.descriptionInfo.number == 5 ) map ((mnrRulesInfoGrp) -> {
+		node: mnrRulesInfoGrp.mnrCatInfo
+	})
+})]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwExercises">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/dwexercises" allowedMethods="GET" doc:name="HTTP"/>
+        <logger level="INFO" doc:name="Logger"/>
+        <set-payload value="#[ [1, 2, 3, 4, 5] ]" doc:name="Set Payload # array"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/list_double.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+(flatten (payload map ((item, idx) -> {
+	item: (item+1)
+} as :array) ) )
+
+]]></dw:set-payload>
+        </dw:transform-message>
+        <logger level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="dwEx2">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/dwex2" allowedMethods="GET" doc:name="HTTP"/>
+        <set-payload value="#[ [
+{	name: &quot;Archer&quot; },
+	
+{	name: &quot;Cyrill&quot;},
+	
+{	name: &quot;Pam&quot; }
+] ]" mimeType="application/json" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/UserDefined.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((payload1, idx) -> {
+	id: (idx+1),
+	name: payload1.name
+})]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwEx4">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/dwEx4" doc:name="HTTP"/>
+        <set-payload value="#[[
+  { 
+    &quot;name&quot;: &quot;Archer&quot;,
+    &quot;jobs&quot;: [
+      { &quot;type&quot;: &quot;developer&quot; },
+      { &quot;type&quot;: &quot;investor&quot;  },
+      { &quot;type&quot;: &quot;educator&quot;  } 
+    ] 
+  },
+  {
+    &quot;name&quot;: &quot;Cyril&quot;,
+    &quot;jobs&quot;: [
+      { &quot;type&quot;: &quot;developer&quot;    },
+      { &quot;type&quot;: &quot;entrepreneur&quot; },
+      { &quot;type&quot;: &quot;lion tamer&quot;   }
+    ]
+  } 
+]]" mimeType="application/json" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/UserDefined_1.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+//mnrByPricingRecord.mnrRulesInfoGrp filter ($.mnrCatInfo.descriptionInfo.number == 5 ) map ((mnrRulesInfoGrp) -> {
+//		node: mnrRulesInfoGrp.mnrCatInfo
+//	})
+---
+payload map ((item, idx) -> {
+	num: (idx+1),
+	name: item.name,
+	jobs: item.jobs map ((jitem, jdx) -> {
+		num: (jdx+1),
+		type: jitem.type
+	})
+})]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwtesterFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/dwExFilter" doc:name="HTTP"/>
+        <logger level="INFO" doc:name="Logger"/>
+        <set-payload value="#[ [1,2,3,4,5] ]" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/list_double_1.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+// remove even indicies
+//(payload filter ( $$ mod 2 ) != 0)
+// remove odd values
+(payload filter ( $ mod 2 ) != 0 )
+
+]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwFilter2">
+        <set-payload value="#[ [
+  {
+    &quot;id&quot;: 1,
+    &quot;status&quot;: &quot;waiting&quot;
+  },
+  {
+    &quot;id&quot;: 2,
+    &quot;status&quot;: &quot;processed&quot;
+  },
+  {
+    &quot;id&quot;: 3,
+    &quot;status&quot;: &quot;waiting&quot;
+  }
+] 
+]" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/UserDefined_2.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+(payload filter ($.status != "processed"))]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwExFilter4">
+        <set-payload value="#[[
+  &quot;starting&quot;, 
+  &quot;waiting&quot;, 
+  &quot;deleted&quot;, 
+  &quot;processing&quot;, 
+  &quot;processed&quot;
+]]" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/list_string.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+(payload filter ($ != "deleted" and $ != "processed")) ]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwtesterMapObject1">
+        <set-payload value="#[{
+  &quot;one&quot;:   &quot;two&quot;,
+  &quot;three&quot;: &quot;four&quot;,
+  &quot;five&quot;:  &quot;six&quot;
+}]" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/string_1.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+//payload mapObject (item, idx) -> {
+//	(upper '$idx'): upper item
+//}
+
+payload mapObject {
+	(upper '$$'): upper $
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwtesterFlow1">
+        <set-payload value="#[{
+  &quot;one&quot;:   &quot;two&quot;,
+  &quot;three&quot;: null,
+  &quot;five&quot;:  null
+}]" mimeType="application/json" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="xform - using mapObject">
+            <dw:input-payload doc:sample="sample_data/string_2.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+//payload mapObject ((item, idx) -> {
+//	('$idx'): item
+//})
+
+
+//(payload filter ($ != null))
+
+payload mapObject (value, key) -> {
+	((key): (value)) when value != null
+}
+]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwPluck1">
+        <set-payload value="#[{
+  &quot;one&quot;:   &quot;two&quot;,
+  &quot;three&quot;: &quot;four&quot;,
+  &quot;five&quot;:  &quot;six&quot;
+}]" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="xform - using pluck">
+            <dw:input-payload doc:sample="sample_data/string_3.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+//payload pluck (value, key) -> {
+//	values: value
+//}
+//payload pluck ($)
+
+
+//payload pluck 
+//[
+//	$$, $
+//]
+---
+payload pluck (value, key) ->
+{
+	(key): value
+}
+]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="dwGroupBy1">
+        <set-payload value="#['2']" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="groupBy" metadata:id="21482ccd-afc1-47e8-b2ef-49bc351cff3e">
+            <dw:input-payload doc:sample="united-flights-example.json" mimeType="application/json"/>
+            <dw:input-variable doc:sample="invoices_json.json" mimeType="application/json" variableName="invoices"/>
+            <dw:input-variable doc:sample="allocations_json.json" mimeType="application/json" variableName="allocations"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+//flowVars.invoices map (item, idx) -> {
+//		
+//	invoiceId: item.invoiceId,
+//	amount: item.amount,
+//	
+//	allocations: (flowVars.allocations filter ($.invoiceId == item.invoiceId) )
+//	
+//		
+//} 
+
+%var groupedAllocations = flowVars.allocations groupBy (item) -> item.invoiceId
+
+---
+flowVars.invoices map ((item, idx) -> {
+	invoiceId: item.invoiceId,
+	amount: item.amount,
+	allocations: (groupedAllocations filter ($[0].invoiceId == item.invoiceId))[0] //distinctBy $[0].invoiceId
+	, groupedAllocs: groupedAllocations
+})
+]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+</mule>

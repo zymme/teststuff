@@ -1,0 +1,121 @@
+[
+  {
+    "QueueListReply": {
+      "queueView": {
+        "agent": {
+          "originatorDetails": {
+            "inHouseIdentification1": "NCE1A0990"
+          }
+        },
+        "queueNumber": {
+          "queueDetails": {
+            "number": 1
+          }
+        },
+        "categoryDetails": {
+          "subQueueInfoDetails": {
+            "identificationType": "C",
+            "itemNumber": "21"
+          }
+        },
+        "pnrCount": [
+          {
+            "quantityDetails": {
+              "numberOfUnit": 1
+            }
+          }
+        ],
+        "item": [
+          {
+            "paxName": {
+              "paxDetails": {
+                "surname": "TEST1",
+                "type": "0",
+                "quantity": 1
+              }
+            },
+            "recLoc": {
+              "reservation": {
+                "controlNumber": "ABC123"
+              }
+            },
+            "segment": {
+              "flightDate": {
+                "departureDate": "04MAY19"
+              },
+              "boardPointDetails": {
+                "trueLocation": "DAL"
+              },
+              "offpointDetails": {
+                "trueLocation": "HOU"
+              },
+              "companyDetails": {
+                "marketingCompany": "AC"
+              },
+              "flightIdentification": {
+                "flightNumber": "112",
+                "operationalSuffix": "AC"
+              }
+            },
+            "agent": {
+              "originatorDetails": {
+                "inHouseIdentification1": "NCE1A0990",
+                "inHouseIdentification2": "WS"
+              }
+            },
+            "pnrdates": [
+              {
+                "timeMode": "700",
+                "dateTime": "2019-01-02T14:53:00"
+              }
+            ]
+          },
+          {
+            "paxName": {
+              "paxDetails": {
+                "surname": "TEST2",
+                "type": "0",
+                "quantity": 1
+              }
+            },
+            "recLoc": {
+              "reservation": {
+                "controlNumber": "ABC456"
+              }
+            },
+            "segment": {
+              "flightDate": {
+                "departureDate": "12MAY19"
+              },
+              "boardPointDetails": {
+                "trueLocation": "YWG"
+              },
+              "offpointDetails": {
+                "trueLocation": "HOU"
+              },
+              "companyDetails": {
+                "marketingCompany": "AC"
+              },
+              "flightIdentification": {
+                "flightNumber": "235",
+                "operationalSuffix": "AC"
+              }
+            },
+            "agent": {
+              "originatorDetails": {
+                "inHouseIdentification1": "NCE1A0990",
+                "inHouseIdentification2": "WS"
+              }
+            },
+            "pnrdates": [
+              {
+                "timeMode": "800",
+                "dateTime": "2019-01-01T14:53:00"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

@@ -1,0 +1,16 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "invoices_example_csv"
+        }
+    },
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "invoices_csv_example_json"
+        }
+    },
+    "id": "d4ea09b6-2795-4843-a563-25a2dd1fa9e8",
+    "version": "5.2.0.0"
+}

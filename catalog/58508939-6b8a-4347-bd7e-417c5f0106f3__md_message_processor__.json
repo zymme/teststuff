@@ -1,0 +1,16 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "pnr-8408-8407-json"
+        }
+    },
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "pnr-listpassengers-flight-seatIndicator-json"
+        }
+    },
+    "id": "58508939-6b8a-4347-bd7e-417c5f0106f3",
+    "version": "5.2.0.0"
+}

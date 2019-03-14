@@ -1,0 +1,21 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "united_json"
+        },
+        "flowVariables": {
+            "invoices": {
+                "connectorName": "#_custom_mule_metadata_type_#",
+                "typeId": "invoices_json"
+            },
+            "allocations": {
+                "connectorName": "#_custom_mule_metadata_type_#",
+                "typeId": "allocations_json"
+            }
+        }
+    },
+    "outputMessageMetadata": {},
+    "id": "21482ccd-afc1-47e8-b2ef-49bc351cff3e",
+    "version": "5.2.0.0"
+}
